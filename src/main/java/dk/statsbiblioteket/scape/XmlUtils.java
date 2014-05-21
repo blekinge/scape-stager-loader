@@ -7,12 +7,13 @@ import eu.scape_project.util.ScapeMarshaller;
 import javax.xml.bind.JAXBException;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
 public class XmlUtils {
     private static ScapeMarshaller scapeMarshaller;
-
 
 
     public static IntellectualEntity toEntity(InputStream contents) throws ParsingException {
@@ -40,7 +41,7 @@ public class XmlUtils {
     }
 
     public static <T> T toObject(InputStream contents) throws ParsingException {
-        if (contents == null){
+        if (contents == null) {
             return null;
         }
         try {
@@ -68,7 +69,7 @@ public class XmlUtils {
         try {
             sink.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return new ByteArrayInputStream(sink.toByteArray());
     }
@@ -84,7 +85,7 @@ public class XmlUtils {
         try {
             sink.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
         return new ByteArrayInputStream(sink.toByteArray());
     }
@@ -97,6 +98,15 @@ public class XmlUtils {
             throw new ParsingException(e);
         }
         return sink.toString();
+    }
+
+    public static void toFile(Object xml, File file) throws IOException {
+        try (FileOutputStream outStream = new FileOutputStream(file)){
+            getScapeMarshaller().serialize(xml, outStream);
+        } catch (JAXBException e) {
+            throw new ParsingException(e);
+        }
+
     }
 
 

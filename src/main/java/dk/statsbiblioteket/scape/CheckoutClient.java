@@ -1,37 +1,44 @@
 package dk.statsbiblioteket.scape;
 
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.JdkFutureAdapters;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-public class CheckoutClient implements ScapeClient {
+public class CheckoutClient extends ScapeClient {
 
-
-    private final String service;
-
-    public CheckoutClient(String service) {
-        this.service = service;
+    protected CheckoutClient(String service, String username, String password) {
+        super(service, username, password);
     }
 
-    public InputStream checkoutEntity( java.util.function.Function<String, Future<InputStream>> mapper, String... identifiers) {
-        List<Future<? extends InputStream>> entities = new ArrayList<>();
-        entities.add(Futures.immediateFuture(new ByteArrayInputStream("<glob>".getBytes())));
-        entities.addAll(Arrays.asList(identifiers)
-                              .parallelStream()
-                              .map(mapper::apply)
-                              .collect(Collectors.toList()));
-        entities.add(Futures.immediateFuture(new ByteArrayInputStream("</glob>".getBytes())));
-        return new FutureSequenceInputStream(entities.iterator());
+    public List<InputStream> checkoutEntities(java.util.function.Function<String, Future<InputStream>> mapper,
+                                              Collection<String> identifiers)  {
+        try {
+            return Futures.allAsList(identifiers.parallelStream()
+                                         .map(mapper::apply)
+                                         .map(future -> JdkFutureAdapters.listenInPoolThread(future))
+                                         .collect(Collectors.toList())).get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e.getCause());
+        }
+
+
     }
 
     private Future<InputStream> getIntellectualEntity(String identifier) {
-        return httpClient.target(service).path(identifier).request().async().get(InputStream.class);
+        return request().path(identifier).request().async().get(InputStream.class);
+    }
+
+
+    public List<InputStream> checkoutEntity(Collection<String> identifiers) {
+        return checkoutEntities(this::getIntellectualEntity, identifiers);
     }
 
 }

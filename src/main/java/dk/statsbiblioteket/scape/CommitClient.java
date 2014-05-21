@@ -3,8 +3,13 @@ package dk.statsbiblioteket.scape;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.JdkFutureAdapters;
 import eu.scape_project.model.IntellectualEntity;
+import eu.scape_project.util.ScapeMarshaller;
 
 import javax.ws.rs.client.Entity;
+import javax.xml.bind.JAXBException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
@@ -12,32 +17,62 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
-public class CommitClient implements ScapeClient {
+public class CommitClient extends ScapeClient {
 
-    private String service;
+    private ScapeMarshaller marshaller;
 
 
-    public List<String> commitEntity(java.util.function.Function<Entry<String, Entity<InputStream>>, Future<String>> mapper,
-                                     Collection<IntellectualEntity> entities) {
+    protected CommitClient(String service, String username, String password) throws JAXBException {
+        super(service, username, password);
+        marshaller = ScapeMarshaller.newInstance();
+    }
+
+
+    public List<String> commitEntity(java.util.function.Function<Entry<String, InputStream>, Future<String>> mapper,
+                                     Collection<File> files) {
 
 
         try {
-            return Futures.allAsList(entities.parallelStream()
-                                             .map(entity -> new Entry<>(entity.getIdentifier()
-                                                                              .getValue(),
-                                                                        XmlUtils.toBytes(entity, false)
-                                             ))
-                                             .map(pair -> new Entry<>(pair.getKey(), Entity.xml(pair.getValue())))
-                                             .map(mapper::apply)
-                                             .map(future -> JdkFutureAdapters.listenInPoolThread(future))
-                                             .collect(Collectors.toList())).get();
+            return Futures.allAsList(files.parallelStream()
+                                          .map(this::parseEntity)
+                                          .map(mapper::apply)
+                                          .map(future -> JdkFutureAdapters.listenInPoolThread(future))
+                                          .collect(Collectors.toList())).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }
     }
 
-  /*  private Future<String> putIntellectualEntity(Pair<String, Entity<InputStream>> http) {
-        return httpClient.target(service).path(http.getFirst()).request().async().put(http.getSecond(), String.class);
-    }*/
+    private Entry<String, InputStream> parseEntity(File file) {
+        try {
+            return new Entry<>(marshaller.deserialize(IntellectualEntity.class, new FileInputStream(file))
+                                         .getIdentifier()
+                                         .getValue(), new FileInputStream(file));
+        } catch (JAXBException | FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public List<String> commitEntities(Collection<File> files) {
+        return commitEntity(this::putIntellectualEntity, files);
+    }
+
+    public List<String> addAndCommitEntities(Collection<File> files) {
+        return commitEntity(this::postIntellectualEntity, files);
+    }
+
+
+    private Future<String> putIntellectualEntity(Entry<String, InputStream> entry) {
+        return Futures.immediateFuture(request().path(entry.getKey())
+                                                .request()
+                                                .put(Entity.xml(entry.getValue()), String.class));
+    }
+
+
+    private Future<String> postIntellectualEntity(Entry<String, InputStream> entry) {
+        return Futures.immediateFuture(request()
+                                                .request()
+                                                .post(Entity.xml(entry.getValue()), String.class));
+    }
 
 }
