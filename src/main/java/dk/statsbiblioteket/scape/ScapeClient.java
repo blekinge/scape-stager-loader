@@ -1,16 +1,16 @@
 package dk.statsbiblioteket.scape;
 
 
-import org.glassfish.jersey.client.JerseyClientBuilder;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.WebTarget;
+import com.sun.jersey.api.client.AsyncWebResource;
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.config.ClientConfig;
+import com.sun.jersey.api.client.config.DefaultClientConfig;
+import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 public abstract class ScapeClient {
 
 
-    public static final Client httpClient = JerseyClientBuilder.newClient();
+    private final Client client;
     private String service;
     private String username;
     private String password;
@@ -19,11 +19,15 @@ public abstract class ScapeClient {
         this.service = service;
         this.username = username;
         this.password = password;
+        ClientConfig config = new DefaultClientConfig();
+        client = Client.create(config);
+
     }
 
-    protected WebTarget request() {
-        HttpAuthenticationFeature feature = HttpAuthenticationFeature.basicBuilder().credentials(username,password).build();
-        return httpClient.target(service).register(feature);
+    protected AsyncWebResource request() {
+        AsyncWebResource restApi = client.asyncResource(service);
+        restApi.addFilter(new HTTPBasicAuthFilter(username,password.getBytes()));
+        return restApi;
     }
 
 }

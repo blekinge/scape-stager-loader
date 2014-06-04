@@ -1,5 +1,6 @@
-package dk.statsbiblioteket.scape;
+package dk.statsbiblioteket.scape.utilities;
 
+import dk.statsbiblioteket.scape.ParsingException;
 import eu.scape_project.model.IntellectualEntity;
 import eu.scape_project.model.Representation;
 import eu.scape_project.util.ScapeMarshaller;

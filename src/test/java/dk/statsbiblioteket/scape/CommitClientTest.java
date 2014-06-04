@@ -1,5 +1,7 @@
 package dk.statsbiblioteket.scape;
 
+import dk.statsbiblioteket.scape.utilities.FutureUtils;
+import dk.statsbiblioteket.scape.utilities.XmlUtils;
 import eu.scape_project.model.Identifier;
 import eu.scape_project.model.IntellectualEntity;
 import eu.scape_project.model.LifecycleState;
@@ -80,7 +82,7 @@ public class CommitClientTest {
         outStream.close();
 
 
-        List<String> results = commitClient.addAndCommitEntities(Arrays.asList(tempfile));
+        List<String> results = commitClient.addAndCommitEntities(FutureUtils.asFutureStreams(Arrays.asList(tempfile)));
         results.forEach(result -> Assert.assertEquals(e.getIdentifier().getValue() + "", result));
 
     }
@@ -94,7 +96,7 @@ public class CommitClientTest {
         tempfile.deleteOnExit();
         XmlUtils.toFile(e, tempfile);
 
-        List<String> results = commitClient.addAndCommitEntities(Arrays.asList(tempfile));
+        List<String> results = commitClient.addAndCommitEntities(FutureUtils.asFutureStreams(Arrays.asList(tempfile)));
         results.forEach(result -> Assert.assertEquals(e.getIdentifier().getValue() + "", result));
 
 

@@ -33,7 +33,7 @@ public class CheckoutClient extends ScapeClient {
     }
 
     private Future<InputStream> getIntellectualEntity(String identifier) {
-        return request().path(identifier).request().async().get(InputStream.class);
+        return request().path(identifier).get(InputStream.class);
     }
 
 
