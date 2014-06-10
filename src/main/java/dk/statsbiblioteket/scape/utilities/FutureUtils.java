@@ -15,6 +15,13 @@ import java.util.concurrent.TimeoutException;
 
 public class FutureUtils {
 
+    public static Collection<Entry<String, Future<InputStream>>> asFutureStreams(Iterable<File> files) {
+        Collection<Entry<String, Future<InputStream>>> result = new ArrayList<>();
+        files.forEach(file -> result.add(new Entry<>(file.getName().replaceAll("\\..*$", ""),
+                new LazyFileFuture(file.getAbsolutePath()))));
+        return result;
+    }
+
     public static class LazyFileFuture implements Future<InputStream> {
 
         private final String fileIdentifier;
@@ -59,12 +66,4 @@ public class FutureUtils {
             return get();
         }
     }
-
-    public static Collection<Entry<String,Future<InputStream>>> asFutureStreams(Iterable<File> files) {
-        Collection<Entry<String,Future<InputStream>>> result = new ArrayList<>();
-        files.forEach(file -> result.add(new Entry<>(file.getName(),new LazyFileFuture(file.getAbsolutePath()))));
-        return result;
-    }
-
-
 }

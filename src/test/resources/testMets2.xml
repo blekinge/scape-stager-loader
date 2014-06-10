@@ -1,0 +1,53 @@
+<mets:mets xmlns:mets="http://www.loc.gov/METS/"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           xmlns:scape="http://scape-project.eu/model"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           ID="4955459363390353054"
+           OBJID="4955459363390353054"
+           PROFILE="scape"
+           xsi:schemaLocation="http://www.loc.gov/METS/ mets.xsd">
+    <mets:metsHdr RECORDSTATUS="NEW"/>
+    <mets:dmdSec ID="DMD-92d32489-0793-4b99-be55-ae62c8fbd395">
+        <mets:mdWrap MDTYPE="OTHER">
+            <mets:xmlData/>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <mets:dmdSec ID="DMD-94dff515-42fa-478f-a9cd-d0b15257c8d5">
+        <mets:mdWrap MDTYPE="OTHER">
+            <mets:xmlData>
+                <scape:versionMD version-number="1"/>
+            </mets:xmlData>
+        </mets:mdWrap>
+    </mets:dmdSec>
+    <mets:amdSec>
+        <mets:techMD ID="TMD-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-SCAPE_REPRESENTATION_TECHNICAL">
+            <mets:mdWrap MDTYPE="OTHER">
+                <mets:xmlData/>
+            </mets:mdWrap>
+        </mets:techMD>
+        <mets:techMD ID="TMD-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-JPYLYZER">
+            <mets:mdWrap MDTYPE="OTHER">
+                <mets:xmlData/>
+            </mets:mdWrap>
+        </mets:techMD>
+    </mets:amdSec>
+    <mets:fileSec>
+        <mets:fileGrp>
+            <mets:file ID="file-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2"
+                       SEQ="0"
+                       ADMID="TMD-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-JPYLYZER">
+                <mets:FLocat/>
+            </mets:file>
+        </mets:fileGrp>
+    </mets:fileSec>
+    <mets:structMap>
+        <mets:div TYPE="Intellectual entity">
+            <mets:div ID="uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2"
+                      ADMID="TMD-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-SCAPE_REPRESENTATION_TECHNICAL"
+                      TYPE="Representation"
+                      xlink:label="">
+                <mets:fptr FILEID="file-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2"/>
+            </mets:div>
+        </mets:div>
+    </mets:structMap>
+</mets:mets>

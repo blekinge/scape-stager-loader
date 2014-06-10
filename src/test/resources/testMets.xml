@@ -1,60 +1,61 @@
 <mets:mets xmlns:mets="http://www.loc.gov/METS/"
            xmlns:xlink="http://www.w3.org/1999/xlink"
            xmlns:scape="http://scape-project.eu/model"
-           xmlns:dc="http://purl.org/dc/elements/1.1/"
-           xmlns:premis="info:lc/xmlns/premis-v2"
            xmlns:textmd="info:lc/xmlns/textmd-v3"
-           xmlns:fits="http://hul.harvard.edu/ois/xml/ns/fits/fits_output"
-           xmlns:ns9="http://www.loc.gov/mix/v20"
-           xmlns:gbs="http://books.google.com/gbs"
-           xmlns:ns11="http://www.ffmpeg.org/schema/ffprobe"
-           xmlns:vmd="http://www.loc.gov/videoMD/"
-           xmlns:ns13="http://www.loc.gov/audioMD/"
-           xmlns:marc="http://www.loc.gov/MARC21/slim"
-           ID="4955459363390353054"
-           OBJID="4955459363390353054"
+           ID="testMets"
+           OBJID="testMets"
            PROFILE="scape">
     <mets:metsHdr RECORDSTATUS="NEW"/>
-    <mets:dmdSec ID="DMD-92d32489-0793-4b99-be55-ae62c8fbd395">
-        <mets:mdWrap MDTYPE="OTHER">
+    <mets:dmdSec ID="DMD-d15cc6e0-f6c4-4507-be11-4e4902a9af5f">
+    <mets:mdWrap MDTYPE="OTHER">
             <mets:xmlData/>
         </mets:mdWrap>
     </mets:dmdSec>
-    <mets:dmdSec ID="DMD-94dff515-42fa-478f-a9cd-d0b15257c8d5">
-        <mets:mdWrap MDTYPE="OTHER">
+    <mets:dmdSec ID="DMD-da61c48d-f1b0-4818-8c6f-83374fca862c">
+    <mets:mdWrap MDTYPE="OTHER">
             <mets:xmlData>
                 <scape:versionMD version-number="1"/>
             </mets:xmlData>
         </mets:mdWrap>
     </mets:dmdSec>
     <mets:amdSec>
-        <mets:techMD ID="TMD-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-SCAPE_REPRESENTATION_TECHNICAL">
-            <mets:mdWrap MDTYPE="OTHER">
-                <mets:xmlData/>
+        <mets:techMD ID="TMD-Representation-SCAPE_REPRESENTATION_TECHNICAL">
+            <mets:mdWrap MDTYPE="TEXTMD">
+                <mets:xmlData>
+                    <textmd:textMD>
+                        <textmd:encoding>
+                            <textmd:encoding_platform linebreak="LF">value</textmd:encoding_platform>
+                        </textmd:encoding>
+                    </textmd:textMD>
+                </mets:xmlData>
             </mets:mdWrap>
         </mets:techMD>
-        <mets:techMD ID="TMD-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-JPYLYZER">
-            <mets:mdWrap MDTYPE="OTHER">
-                <mets:xmlData/>
+        <mets:techMD ID="TMD-Representation-The_One_File-JPYLYZER">
+            <mets:mdWrap MDTYPE="TEXTMD">
+                <mets:xmlData>
+                    <textmd:textMD>
+                        <textmd:encoding>
+                            <textmd:encoding_platform linebreak="LF">value</textmd:encoding_platform>
+                        </textmd:encoding>
+                    </textmd:textMD>
+                </mets:xmlData>
             </mets:mdWrap>
         </mets:techMD>
     </mets:amdSec>
     <mets:fileSec>
         <mets:fileGrp>
-            <mets:file ID="uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2"
-                       SEQ="0"
-                       ADMID="TMD-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-JPYLYZER">
-                <mets:FLocat/>
+            <mets:file ID="The_One_File" SEQ="0" ADMID="TMD-Representation-The_One_File-JPYLYZER">
+            <mets:FLocat/>
             </mets:file>
         </mets:fileGrp>
     </mets:fileSec>
     <mets:structMap>
         <mets:div TYPE="Intellectual entity">
-            <mets:div ID="uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2"
-                      ADMID="TMD-uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2-SCAPE_REPRESENTATION_TECHNICAL"
+            <mets:div ID="Representation"
+                      ADMID="TMD-Representation-SCAPE_REPRESENTATION_TECHNICAL"
                       TYPE="Representation"
-                      xlink:label="">
-                <mets:fptr FILEID="uuid:c02bb817-15b7-4f3c-b8a4-4e99e907a5a2"/>
+                      xlink:label="representation">
+                <mets:fptr FILEID="The_One_File"/>
             </mets:div>
         </mets:div>
     </mets:structMap>
