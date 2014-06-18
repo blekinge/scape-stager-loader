@@ -2,6 +2,7 @@ package dk.statsbiblioteket.scape;
 
 import dk.statsbiblioteket.scape.utilities.FutureUtils;
 import dk.statsbiblioteket.scape.utilities.XmlUtils;
+import dk.statsbiblioteket.util.Pair;
 import eu.scape_project.model.Identifier;
 import eu.scape_project.model.IntellectualEntity;
 import eu.scape_project.model.LifecycleState;
@@ -18,6 +19,8 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 public class CommitClientTest {
 
@@ -89,8 +92,9 @@ public class CommitClientTest {
         XmlUtils.toFile(e, tempfile);
         List<String> results = commitClient.addAndCommitEntities(FutureUtils.asFutureStreams(Arrays.asList(tempfile)));
         results.forEach(result -> Assert.assertEquals(e.getIdentifier().getValue() + "", result));
-        List<InputStream> checkoutStream = checkoutClient.checkoutEntity(Arrays.asList(testIdentifier));
-        IntellectualEntity entityRead = XmlUtils.toEntity(checkoutStream.get(0));
+        Stream<Pair<String, Future<InputStream>>> checkoutStream = checkoutClient.checkoutEntity(Arrays.asList(
+                testIdentifier));
+        IntellectualEntity entityRead = XmlUtils.toEntity(checkoutStream.findFirst().get().getRight().get());
         Assert.assertEquals(e, entityRead);
     }
 }

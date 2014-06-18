@@ -21,23 +21,36 @@ public class SequenceFileUtility {
 
 
     public static void write(File sequenceFile, Map<String, InputStream> values) throws IOException {
-        Configuration conf = new Configuration(true);
-        Text key = new Text();
-        BytesWritable value = new BytesWritable();
-
-        try (SequenceFile.Writer writer = SequenceFile.createWriter(
-                conf,
-                SequenceFile.Writer.file(new Path(sequenceFile.toURI())),
-                SequenceFile.Writer.keyClass(key.getClass()),
-                SequenceFile.Writer.valueClass(value.getClass()))) {
+        try (SequenceFile.Writer writer = openWriter(sequenceFile)) {
             for (Map.Entry<String, InputStream> entry : values.entrySet()) {
-                final byte[] bytes = IOUtils.toByteArray(entry.getValue());
-                value.set(bytes, 0, bytes.length);
-                key.set(entry.getKey());
-                writer.append(key, value);
+                append(writer, entry.getKey(), entry.getValue());
             }
         }
     }
+
+    public static SequenceFile.Writer append(SequenceFile.Writer writer, String key, InputStream value) {
+        Text keyWritable = new Text();
+        Text valueWritable = new Text();
+        try {
+            valueWritable.set(IOUtils.toByteArray(value));
+            keyWritable.set(key);
+            writer.append(keyWritable, valueWritable);
+            return writer;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static SequenceFile.Writer openWriter(File sequenceFile) throws IOException {
+        Configuration conf = new Configuration(true);
+        Text key = new Text();
+        Text value = new Text();
+        SequenceFile.Writer writer = SequenceFile.createWriter(conf,
+                SequenceFile.Writer.file(new Path(sequenceFile.toURI())),
+                SequenceFile.Writer.keyClass(key.getClass()), SequenceFile.Writer.valueClass(value.getClass()));
+        return writer;
+    }
+
 
     public static Iterable<Entry<String, InputStream>> read(File sequenceFile) throws IOException {
         return new SequenceFileIterable(sequenceFile.toURI());
@@ -56,7 +69,7 @@ public class SequenceFileUtility {
             return new SequenceFileIterator(sequenceFile);
         }
 
-        public static class SequenceFileIterator implements Iterator<Entry<String,InputStream>> {
+        public static class SequenceFileIterator implements Iterator<Entry<String, InputStream>> {
 
             private final org.apache.hadoop.io.SequenceFile.Reader reader;
 
@@ -68,8 +81,8 @@ public class SequenceFileUtility {
             public SequenceFileIterator(URI sequenceFile) {
                 Configuration conf = new Configuration(true);
                 try {
-                    reader = new org.apache.hadoop.io.SequenceFile.Reader(
-                            conf, org.apache.hadoop.io.SequenceFile.Reader.file(new Path(sequenceFile)));
+                    reader = new org.apache.hadoop.io.SequenceFile.Reader(conf,
+                            org.apache.hadoop.io.SequenceFile.Reader.file(new Path(sequenceFile)));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -86,19 +99,17 @@ public class SequenceFileUtility {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-
             }
 
             @Override
             public synchronized Entry<String, InputStream> next() {
-                if (hasNext()){
+                if (hasNext()) {
                     final ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(value.copyBytes());
                     haveRead = false;
-                    return new Entry<>(key.toString(),byteArrayInputStream);
+                    return new Entry<>(key.toString(), byteArrayInputStream);
                 } else {
                     throw new NoSuchElementException();
                 }
-
             }
 
             @Override

@@ -1,12 +1,11 @@
 package dk.statsbiblioteket.scape;
 
-import com.google.common.util.concurrent.Futures;
+import dk.statsbiblioteket.util.Pair;
 
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CheckoutClient extends ScapeClient {
 
@@ -14,20 +13,18 @@ public class CheckoutClient extends ScapeClient {
         super(service, username, password);
     }
 
-    public List<InputStream> checkoutEntities(java.util.function.Function<String, Future<InputStream>> mapper,
+    public Stream<Pair<String, Future<InputStream>>> checkoutEntities(
+            java.util.function.Function<String, Pair<String, Future<InputStream>>> mapper,
                                               Collection<String> identifiers) {
-        return identifiers.parallelStream()
-                          .map(mapper::apply)
-                          .map(future -> Futures.getUnchecked(future))
-                          .collect(Collectors.toList());
+        return identifiers.parallelStream().map(mapper::apply);
     }
 
-    private Future<InputStream> getIntellectualEntity(String identifier) {
-        return request().path(identifier).get(InputStream.class);
+    private Pair<String, Future<InputStream>> getIntellectualEntity(String identifier) {
+        return new Pair<>(identifier, request().path(identifier).get(InputStream.class));
     }
 
 
-    public List<InputStream> checkoutEntity(Collection<String> identifiers) {
+    public Stream<Pair<String, Future<InputStream>>> checkoutEntity(Collection<String> identifiers) {
         return checkoutEntities(this::getIntellectualEntity, identifiers);
     }
 }

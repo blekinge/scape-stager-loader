@@ -1,14 +1,15 @@
 package dk.statsbiblioteket.scape;
 
 import com.google.common.util.concurrent.Futures;
-import dk.statsbiblioteket.util.Strings;
+import dk.statsbiblioteket.util.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.List;
+import java.util.concurrent.Future;
+import java.util.stream.Stream;
 
 public class CheckoutClientTest {
 
@@ -18,13 +19,11 @@ public class CheckoutClientTest {
         CheckoutClient checkoutClient = new CheckoutClient(null, null, null);
 
         final String testIdentifier = "testIdentifier";
-        List<InputStream> resultStream
-                = checkoutClient.checkoutEntities(identifier -> Futures.immediateFuture(new ByteArrayInputStream(
-                                identifier.getBytes())
-                                                                                       ), Arrays.asList(testIdentifier)
-                                                 );
-
-        Assert.assertEquals(testIdentifier.trim(), Strings.flush(resultStream.get(0)).trim());
+        Stream<Pair<String, Future<InputStream>>> resultStream
+                = checkoutClient.checkoutEntities(identifier -> new Pair<>(identifier,
+                        Futures.immediateFuture(new ByteArrayInputStream(identifier.getBytes()))),
+                Arrays.asList(testIdentifier));
+        Assert.assertEquals(testIdentifier.trim(), resultStream.findFirst().get().getRight().get());
 
     }
 

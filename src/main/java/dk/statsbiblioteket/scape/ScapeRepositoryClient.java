@@ -1,23 +1,32 @@
 package dk.statsbiblioteket.scape;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.util.concurrent.Futures;
 import dk.statsbiblioteket.scape.utilities.FutureUtils;
 import dk.statsbiblioteket.scape.utilities.SequenceFileUtility;
+import dk.statsbiblioteket.util.Pair;
 import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.impl.Arguments;
+import net.sourceforge.argparse4j.inf.ArgumentGroup;
 import net.sourceforge.argparse4j.inf.ArgumentParser;
 import net.sourceforge.argparse4j.inf.ArgumentParserException;
 import net.sourceforge.argparse4j.inf.Namespace;
+import org.apache.hadoop.io.SequenceFile;
 
 import javax.xml.bind.JAXBException;
 import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ScapeRepositoryClient {
 
@@ -28,6 +37,7 @@ public class ScapeRepositoryClient {
     protected static final String FILE = "file";
     private static final String SEQUENCEFILE_IN = "commitSequenceFile";
     private static final String SEQUENCEFILE_OUT = "checkoutSequenceFile";
+    private static final String IDENTIFIER_FILE = "id_file";
 
 
     public static void main(String[] args) throws IOException, JAXBException {
@@ -37,19 +47,18 @@ public class ScapeRepositoryClient {
                                                        "Checkout and commit of Scape Intellectual Entities in a Data Connector enabled Repository");
         parser.addArgument("--repo").required(true).help("The url to the repository data connector endpoint");
         parser.addArgument("--user").required(true).help("The username to use when connecting to the repository");
-        parser.addSubparsers().dest(COMMAND).title("Commands").help("Select one of these commands");
-        parser.addSubparsers().addParser(CHECKOUT).help("The checkout command");
-        parser.addArgument("--" + IDENTIFIER).nargs("*").help("Identifiers to checkout").required(false);
-        parser.addArgument("--" + SEQUENCEFILE_OUT)
-              .nargs(1)
-              .required(false)
-              .help("Sequence where the checked out objects will be written. If not specified, will output to Std. out.");
-        parser.addSubparsers().addParser(COMMIT).help("The commit command");
-        parser.addArgument("--" + FILE).nargs("*").help("Files to commit").required(false);
-        parser.addArgument("--" + SEQUENCEFILE_IN)
-              .nargs(1)
-              .required(false)
-              .help("Sequence file to read the objects to be committed from.");
+        parser.addArgument(COMMAND).nargs(1).choices(CHECKOUT, COMMIT).action(Arguments.store());
+        final ArgumentGroup checkout_group = parser.addArgumentGroup(CHECKOUT);
+        checkout_group.addArgument("--" + IDENTIFIER).nargs("*").help("Identifiers to checkout").required(false);
+        checkout_group.addArgument("--" + IDENTIFIER_FILE).required(false).help("Identifiers to checkout");
+        checkout_group.addArgument("--" + SEQUENCEFILE_OUT)
+                      .required(false)
+                      .help("Sequence where the checked out objects will be written. If not specified, will output to Std. out.");
+        final ArgumentGroup commit_group = parser.addArgumentGroup(COMMIT);
+        commit_group.addArgument("--" + FILE).nargs("*").help("Files to commit").required(false);
+        commit_group.addArgument("--" + SEQUENCEFILE_IN)
+                    .required(false)
+                    .help("Sequence file to read the objects to be committed from.");
         Namespace ns = null;
         try {
             ns = parser.parseArgs(args);
@@ -68,21 +77,40 @@ public class ScapeRepositoryClient {
         }
         final String username = ns.getString("user");
         final String repo = ns.getString("repo");
-        switch (ns.getString(COMMAND)) {
+        final String command = (String) ns.getList(COMMAND).get(0);
+        switch (command) {
             case CHECKOUT: {
                 String sequenceFile = ns.getString(SEQUENCEFILE_OUT);
-                final List<String> identifiers = ns.getList(IDENTIFIER);
-                final List<InputStream> checkouts = checkout(repo, username, password, identifiers);
-                if (sequenceFile != null) {
-                    SequenceFileUtility.write(new File(sequenceFile), map(identifiers, checkouts));
+                String identifierFile = ns.getString(IDENTIFIER_FILE);
+                List<String> identifiers = null;
+                if (identifierFile == null) {
+                    identifiers = ns.getList(IDENTIFIER);
                 } else {
-                    checkouts.stream().forEach(stream -> {
-                        try {
-                            ByteStreams.copy(stream, System.out);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
+                    identifiers = Files.readAllLines(Paths.get(identifierFile))
+                                       .stream()
+                                       .map(String::trim)
+                                       .collect(Collectors.toList());
+                }
+                CheckoutClient client = new CheckoutClient(repo, username, password);
+                try {
+                    final Stream<Pair<String, Future<InputStream>>> checkouts = checkout(client, identifiers);
+                    if (sequenceFile != null) {
+                        try (SequenceFile.Writer writer = SequenceFileUtility.openWriter(new File(sequenceFile))) {
+                            checkouts.forEachOrdered(entry -> SequenceFileUtility.append(writer,
+                                    entry.getLeft(),
+                                    Futures.getUnchecked(entry.getRight())));
                         }
-                    });
+                    } else {
+                        checkouts.forEach(entry -> {
+                            try {
+                                ByteStreams.copy(Futures.getUnchecked(entry.getRight()), System.out);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
+                } finally {
+                    client.destroy();
                 }
                 break;
             }
@@ -111,15 +139,8 @@ public class ScapeRepositoryClient {
         return result;
     }
 
-    private static List<InputStream> checkout(String service, String username, String password,
-                                              List<String> identifiers) {
-        System.out.println(service);
-        CheckoutClient client = new CheckoutClient(service, username, password);
-        try {
-            return client.checkoutEntity(identifiers);
-        } finally {
-            client.destroy();
-        }
+    private static Stream<Pair<String, Future<InputStream>>> checkout(CheckoutClient client, List<String> identifiers) {
+        return client.checkoutEntity(identifiers);
     }
 
     private static List<String> commit(String service, String username, String password,
