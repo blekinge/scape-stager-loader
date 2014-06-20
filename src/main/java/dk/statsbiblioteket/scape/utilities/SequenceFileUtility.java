@@ -4,7 +4,6 @@ import dk.statsbiblioteket.scape.Entry;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 
@@ -75,7 +74,7 @@ public class SequenceFileUtility {
 
             boolean haveRead = false;
             Text key = new Text();
-            BytesWritable value = new BytesWritable();
+            Text value = new Text();
             private boolean next;
 
             public SequenceFileIterator(URI sequenceFile) {
