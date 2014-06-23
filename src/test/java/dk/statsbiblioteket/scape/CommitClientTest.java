@@ -50,10 +50,10 @@ public class CommitClientTest {
         commitClient = new CommitClient(SERVICE, USERNAME, PASSWORD);
         checkoutClient = new CheckoutClient(SERVICE, USERNAME, PASSWORD);
         testIdentifier = "" + new Random().nextLong();
-        e = new IntellectualEntity.Builder().identifier(new Identifier(testIdentifier))
+        e = new IntellectualEntity.Builder().identifier(new Identifier("scape-entity:" + testIdentifier))
                                             .lifecycleState(new LifecycleState("", LifecycleState.State.NEW))
                                             .representations(Arrays.asList(new Representation.Builder().identifier(new Identifier(
-                                                                    "Representation"))
+                                                    "scape-representation:Representation"))
                                                                                                        .title("representation")
                                                                                                        .technical(
                                                                                                                "SCAPE_REPRESENTATION_TECHNICAL",
@@ -65,7 +65,7 @@ public class CommitClientTest {
                                                                                                                                        createTextMDRecord())
                                                                                                                                .identifier(
                                                                                                                                        new Identifier(
-                                                                                                                                               "The_One_File"))
+                                                                                                                                               "scape-file:The_One_File"))
                                                                                                                                .build()))
                                                                                                        .build()))
                                             .build();
